@@ -1,0 +1,47 @@
+MODEL SAVED SUCCESSFULLY
+
+MODEL LOADED SUCCESSFULLY
+
+===================================
+REAL TIME SUPPORT TICKET SYSTEM
+Type 'exit' to stop
+===================================
+
+==============================
+PREDICTION RESULT
+==============================
+Ticket:
+Need dark mode feature
+
+Predicted Category:
+Account
+
+Priority Level:
+Low
+==============================
+
+==============================
+PREDICTION RESULT
+==============================
+Ticket:
+typo found on homepage
+
+Predicted Category:
+Account
+
+Priority Level:
+Low
+==============================
+
+==============================
+PREDICTION RESULT
+==============================
+Ticket:
+unable to reset password
+
+Predicted Category:
+Account
+
+Priority Level:
+Medium
+==============================
