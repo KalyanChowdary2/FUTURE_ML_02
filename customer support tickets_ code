@@ -1,0 +1,317 @@
+# ============================================================
+# AI SUPPORT TICKET CLASSIFICATION SYSTEM
+# SINGLE FILE - ERROR FREE VERSION
+# ============================================================
+
+import pandas as pd
+import re
+import pickle
+import nltk
+
+from nltk.corpus import stopwords
+
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.svm import LinearSVC
+
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import classification_report
+from sklearn.metrics import confusion_matrix
+
+# ============================================================
+# DOWNLOAD NLTK DATA
+# ============================================================
+
+nltk.download('stopwords')
+
+# ============================================================
+# DATASET
+# ============================================================
+
+data = {
+
+    'ticket': [
+
+        'Internet is not working',
+        'Unable to login to account',
+        'Payment failed during transaction',
+        'Need password reset',
+        'Application crashes frequently',
+        'Refund not received',
+        'Unable to update profile',
+        'Server connection timeout',
+        'Invoice not generated',
+        'Email notifications not working',
+        'Account suspended without reason',
+        'Double payment deducted',
+        'Slow application response',
+        'Cannot change password',
+        'Billing amount incorrect',
+        'Software installation issue',
+        'Need help with account settings',
+        'Payment receipt missing',
+        'System error while login',
+        'Subscription cancellation issue',
+        'Website loading very slowly',
+        'Credit card charged twice',
+        'Forgot account password',
+        'App showing blank screen',
+        'Unable to process refund',
+        'Server down issue',
+        'Login OTP not received',
+        'Payment gateway error',
+        'Profile picture upload failed',
+        'Network connection lost'
+
+    ],
+
+    'category': [
+
+        'Technical',
+        'Account',
+        'Billing',
+        'Account',
+        'Technical',
+        'Billing',
+        'Account',
+        'Technical',
+        'Billing',
+        'Technical',
+        'Account',
+        'Billing',
+        'Technical',
+        'Account',
+        'Billing',
+        'Technical',
+        'Account',
+        'Billing',
+        'Technical',
+        'Billing',
+        'Technical',
+        'Billing',
+        'Account',
+        'Technical',
+        'Billing',
+        'Technical',
+        'Account',
+        'Billing',
+        'Account',
+        'Technical'
+
+    ]
+}
+
+# ============================================================
+# CREATE DATAFRAME
+# ============================================================
+
+df = pd.DataFrame(data)
+
+print("\nDATASET")
+print(df.head())
+
+# ============================================================
+# TEXT PREPROCESSING
+# ============================================================
+
+stop_words = set(stopwords.words('english'))
+
+def clean_text(text):
+
+    text = text.lower()
+
+    text = re.sub(r'[^a-zA-Z]', ' ', text)
+
+    words = text.split()
+
+    words = [word for word in words if word not in stop_words]
+
+    return " ".join(words)
+
+df['clean_ticket'] = df['ticket'].apply(clean_text)
+
+print("\nCLEANED DATA")
+print(df[['ticket', 'clean_ticket']].head())
+
+# ============================================================
+# FEATURE EXTRACTION
+# ============================================================
+
+vectorizer = TfidfVectorizer(
+    ngram_range=(1, 2),
+    max_features=5000
+)
+
+X = vectorizer.fit_transform(df['clean_ticket'])
+
+y = df['category']
+
+# ============================================================
+# TRAIN TEST SPLIT
+# ============================================================
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X,
+    y,
+    test_size=0.20,
+    random_state=42,
+    stratify=y
+)
+
+# ============================================================
+# MODEL TRAINING
+# ============================================================
+
+model = LinearSVC()
+
+model.fit(X_train, y_train)
+
+print("\nMODEL TRAINED SUCCESSFULLY")
+
+# ============================================================
+# PREDICTION
+# ============================================================
+
+y_pred = model.predict(X_test)
+
+# ============================================================
+# EVALUATION
+# ============================================================
+
+accuracy = accuracy_score(y_test, y_pred)
+
+print("\n===================================")
+print("MODEL EVALUATION")
+print("===================================")
+
+print(f"\nAccuracy: {accuracy * 100:.2f}%")
+
+print("\nClassification Report:")
+print(classification_report(y_test, y_pred))
+
+print("\nConfusion Matrix:")
+print(confusion_matrix(y_test, y_pred))
+
+# ============================================================
+# PRIORITY PREDICTION FUNCTION
+# ============================================================
+
+def predict_priority(ticket):
+
+    ticket = ticket.lower()
+
+    high_priority_words = [
+        'failed',
+        'error',
+        'crash',
+        'timeout',
+        'suspended',
+        'deducted',
+        'down',
+        'not working',
+        'lost'
+    ]
+
+    medium_priority_words = [
+        'slow',
+        'issue',
+        'unable',
+        'incorrect',
+        'missing'
+    ]
+
+    for word in high_priority_words:
+        if word in ticket:
+            return "High"
+
+    for word in medium_priority_words:
+        if word in ticket:
+            return "Medium"
+
+    return "Low"
+
+# ============================================================
+# CUSTOM TEST
+# ============================================================
+
+print("\n===================================")
+print("CUSTOM TICKET TEST")
+print("===================================")
+
+new_ticket = "Payment deducted but refund not received"
+
+cleaned_ticket = clean_text(new_ticket)
+
+ticket_vector = vectorizer.transform([cleaned_ticket])
+
+predicted_category = model.predict(ticket_vector)[0]
+
+predicted_priority = predict_priority(new_ticket)
+
+print("\nTicket:")
+print(new_ticket)
+
+print("\nPredicted Category:")
+print(predicted_category)
+
+print("\nPredicted Priority:")
+print(predicted_priority)
+
+# ============================================================
+# SAVE MODEL
+# ============================================================
+
+pickle.dump(model, open('model.pkl', 'wb'))
+pickle.dump(vectorizer, open('vectorizer.pkl', 'wb'))
+
+print("\nMODEL SAVED SUCCESSFULLY")
+
+# ============================================================
+# LOAD MODEL
+# ============================================================
+
+loaded_model = pickle.load(open('model.pkl', 'rb'))
+loaded_vectorizer = pickle.load(open('vectorizer.pkl', 'rb'))
+
+print("\nMODEL LOADED SUCCESSFULLY")
+
+# ============================================================
+# REAL TIME SUPPORT TICKET SYSTEM
+# ============================================================
+
+print("\n===================================")
+print("REAL TIME SUPPORT TICKET SYSTEM")
+print("Type 'exit' to stop")
+print("===================================")
+
+while True:
+
+    user_ticket = input("\nEnter Support Ticket: ")
+
+    if user_ticket.lower() == "exit":
+
+        print("\nSystem Closed")
+        break
+
+    cleaned_input = clean_text(user_ticket)
+
+    input_vector = loaded_vectorizer.transform([cleaned_input])
+
+    predicted_category = loaded_model.predict(input_vector)[0]
+
+    predicted_priority = predict_priority(user_ticket)
+
+    print("\n==============================")
+    print("PREDICTION RESULT")
+    print("==============================")
+
+    print("Ticket:")
+    print(user_ticket)
+
+    print("\nPredicted Category:")
+    print(predicted_category)
+
+    print("\nPriority Level:")
+    print(predicted_priority)
+
+    print("==============================")
